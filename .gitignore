@@ -41,3 +41,22 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# build artifacts (should not be in repo)
+appauth/
+appauthcallback/
+appdb/
+apphealjai/
+apphealjaichat/
+apphealjaichat[roomId]/
+applib/
+applibactions/
+applibsupabase/
+applogin/
+appsignup/
+componentshealjai/
+componentslayout/
+componentswebboard/
+
+# cleanup and planning docs (optional)
+CLEANUP-PLAN.md

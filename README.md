@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HealJAI - Mental Health Support Platform
 
-## Getting Started
+A Next.js-based platform combining webboard discussions and anonymous peer support chat.
 
-First, run the development server:
+## 🎯 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Webboard
+- Create and browse discussion topics
+- Comment system
+- Category organization
+- Hashtag support
+- User authentication
+
+### 2. HealJAI Chat (Anonymous Support)
+- Real-time anonymous matching
+- Two modes: "Suffering" (seeking support) and "Healing" (offering support)
+- Profanity filter
+- Anonymous, ephemeral conversations
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Database:** Supabase (PostgreSQL)
+- **Realtime:** Supabase Realtime
+- **Authentication:** Supabase Auth
+- **ORM:** Drizzle
+- **Styling:** Tailwind CSS
+- **Deployment:** Vercel
+
+## 📁 Project Structure
+
+```
+healjai/
+├── app/
+│   ├── @auth/              # Auth modal routes (intercepting routes)
+│   ├── auth/               # Auth callbacks
+│   ├── create-topic/       # Topic creation
+│   ├── db/                 # Database schema (Drizzle)
+│   ├── healjai/            # HealJAI chat feature
+│   │   ├── actions.ts      # Server actions
+│   │   ├── types.ts        # TypeScript types
+│   │   ├── chat/[roomId]/  # Chat room page
+│   │   └── page.tsx        # HealJAI landing
+│   ├── lib/                # Shared utilities
+│   │   ├── actions/        # Server actions
+│   │   ├── supabase/       # Supabase clients
+│   │   └── definitions.ts  # Zod schemas
+│   ├── login/              # Login page
+│   ├── settings/           # User settings
+│   ├── signup/             # Signup page
+│   └── page.tsx            # Home (webboard)
+├── components/
+│   ├── healjai/            # HealJAI components
+│   ├── layout/             # Layout components
+│   ├── ui/                 # Reusable UI components
+│   └── webboard/           # Webboard components
+├── lib/
+│   └── profanity.ts        # Profanity filter
+├── docs/                   # Documentation
+└── public/                 # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+
+- Supabase account
+- Vercel account (for deployment)
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd healjai
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Set up environment variables:
+```bash
+cp .env.example .env.development
+```
 
-## Deploy on Vercel
+Edit `.env.development`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+DATABASE_URL=your_postgres_connection_string
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. Push database schema:
+```bash
+npm run db:push:dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Set up Supabase Realtime (for HealJAI):
+   - Open Supabase Dashboard → SQL Editor
+   - Run the SQL from `supabase-healjai-setup.sql`
+
+6. Run development server:
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## 📝 Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run db:push:dev  # Push schema to development DB
+npm run db:push:prod # Push schema to production DB
+```
+
+## 🌐 Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick deploy to Vercel:
+```bash
+vercel
+```
+
+## 📚 Documentation
+
+- [Deployment Guide](./DEPLOYMENT.md) - Production deployment
+- [HealJAI Migration](./docs/HEALJAI-MIGRATION.md) - Technical details
+- [Dev Deployment](./docs/DEPLOY-DEV.md) - Preview deployments
+
+## 🔐 Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+
+## 🧪 Features Status
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| User Authentication | ✅ Production Ready | Google OAuth + Email |
+| Webboard Topics | ✅ Production Ready | CRUD operations |
+| Comments | 🚧 Partial | Backend ready, UI WIP |
+| HealJAI Chat | ✅ Production Ready | Supabase Realtime |
+| User Settings | ✅ Production Ready | Profile & avatar |
+
+## 📄 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions welcome! Please read our contributing guidelines first.

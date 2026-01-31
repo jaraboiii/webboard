@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { sendChatMessage, getMessages, leaveChat, getRoomData } from '../../app/healjai/actions';
-import { User } from '@/lib/store';
+import { User } from '@/app/healjai/types';
 import { createClient } from '@/app/lib/supabase/client';
 
 interface ChatInterfaceProps {
