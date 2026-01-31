@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { sendChatMessage, getMessages, leaveChat, getRoomData } from '../../app/healjai/actions';
 import { User } from '@/lib/store';
+import { createClient } from '@/app/lib/supabase/client';
 
 interface ChatInterfaceProps {
   roomId: string;
@@ -52,29 +53,73 @@ export default function ChatInterface({ roomId }: ChatInterfaceProps) {
     return () => {};
   }, [roomId, userId, router]);
 
-  // Polling
+  // Realtime Messages Subscription (replace polling)
   useEffect(() => {
     if (!userId) return;
 
-    const interval = setInterval(async () => {
+    const fetchInitialMessages = async () => {
       const result = await getMessages(roomId);
       if (result) {
-        setMessages(prev => {
-            if (prev.length !== result.messages.length) {
-                setTimeout(scrollToBottom, 100);
-                return result.messages;
-            }
-            return prev;
-        });
-        
-        if (!result.isActive) {
-           setIsActive(false);
-           clearInterval(interval);
-        }
+        setMessages(result.messages.map(msg => ({
+          id: msg.id,
+          senderId: msg.sender_id || 'system',
+          senderName: msg.sender_name,
+          content: msg.content,
+          timestamp: new Date(msg.created_at).getTime(),
+        })));
+        setIsActive(result.isActive);
       }
-    }, 2000);
+    };
 
-    return () => clearInterval(interval);
+    fetchInitialMessages();
+
+    // Subscribe to new messages
+    const supabase = createClient();
+    
+    const channel = supabase
+      .channel(`room-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'healjai_messages',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload: { new: { id: string; sender_id: string | null; sender_name: string; content: string; created_at: string } }) => {
+          const newMsg = payload.new;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: newMsg.id,
+              senderId: newMsg.sender_id || 'system',
+              senderName: newMsg.sender_name,
+              content: newMsg.content,
+              timestamp: new Date(newMsg.created_at).getTime(),
+            },
+          ]);
+          setTimeout(scrollToBottom, 100);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'healjai_rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        (payload: { new: { is_active: number } }) => {
+          if (payload.new.is_active === 0) {
+            setIsActive(false);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [roomId, userId]);
 
   const handleSend = async (e: React.FormEvent) => {

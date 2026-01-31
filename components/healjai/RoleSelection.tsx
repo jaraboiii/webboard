@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { joinHealjai, checkMatchStatus } from '../../app/healjai/actions';
+import { createClient } from '@/app/lib/supabase/client';
 
 export default function RoleSelection() {
   const [name, setName] = useState('');
@@ -13,18 +14,43 @@ export default function RoleSelection() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  // Polling for match
+  // Realtime subscription for match status
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isSearching && userId) {
-      interval = setInterval(async () => {
-        const status = await checkMatchStatus(userId);
-        if (status.matched && status.roomId) {
-           router.push(`/healjai/chat/${status.roomId}?userId=${userId}`);
+    if (!isSearching || !userId) return;
+
+    const supabase = createClient();
+
+    // Subscribe to user status changes
+    const channel = supabase
+      .channel(`user-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'healjai_users',
+          filter: `id=eq.${userId}`,
+        },
+        async (payload: { new: { status: string; room_id: string | null } }) => {
+          if (payload.new.status === 'matched' && payload.new.room_id) {
+            router.push(`/healjai/chat/${payload.new.room_id}?userId=${userId}`);
+          }
         }
-      }, 2000);
-    }
-    return () => clearInterval(interval);
+      )
+      .subscribe();
+
+    // Also check once immediately in case match happened before subscription
+    const checkImmediately = async () => {
+      const status = await checkMatchStatus(userId);
+      if (status.matched && status.roomId) {
+        router.push(`/healjai/chat/${status.roomId}?userId=${userId}`);
+      }
+    };
+    checkImmediately();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isSearching, userId, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
