@@ -138,12 +138,26 @@ export default function ChatInterface({ roomId }: ChatInterfaceProps) {
     };
   
     const handleExit = async () => {
-      if (!userId) return;
-      if (confirm('ยืนยันที่จะจบการสนทนาในกระทู้นี้?')) {
-          await leaveChat(roomId, userId);
-          router.push('/healjai');
+    if (!userId) return;
+    if (confirm('ยืนยันที่จะจบการสนทนาในกระทู้นี้?')) {
+      try {
+        // Disable interactions during cleanup
+        setIsActive(false);
+        
+        await leaveChat(roomId, userId);
+        
+        // Wait a bit for realtime updates to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Then redirect
+        router.push('/healjai');
+      } catch (error) {
+        console.error('Error leaving chat:', error);
+        // Redirect anyway
+        router.push('/healjai');
       }
-    };
+    }
+  };
   
     if (isLoading) {
       return (

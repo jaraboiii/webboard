@@ -217,29 +217,46 @@ export async function getMessages(roomId: string) {
 }
 
 export async function leaveChat(roomId: string, userId: string) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // Mark room as inactive
-  await supabase
-    .from('healjai_rooms')
-    .update({ is_active: 0, ended_at: new Date().toISOString() })
-    .eq('id', roomId);
+    // Mark room as inactive
+    const { error: roomError } = await supabase
+      .from('healjai_rooms')
+      .update({ is_active: 0, ended_at: new Date().toISOString() })
+      .eq('id', roomId);
 
-  // Add system message
-  await supabase
-    .from('healjai_messages')
-    .insert({
-      room_id: roomId,
-      sender_id: null,
-      sender_name: 'System',
-      content: 'คู่สนทนาของคุณได้ออกจากห้องแล้ว การสนทนาสิ้นสุดลง',
-    });
+    if (roomError) {
+      console.error('Failed to update room:', roomError);
+    }
 
-  // Update user status
-  await supabase
-    .from('healjai_users')
-    .update({ status: 'left' })
-    .eq('id', userId);
+    // Add system message
+    const { error: messageError } = await supabase
+      .from('healjai_messages')
+      .insert({
+        room_id: roomId,
+        sender_id: null,
+        sender_name: 'System',
+        content: 'คู่สนทนาของคุณได้ออกจากห้องแล้ว การสนทนาสิ้นสุดลง',
+      });
 
-  return { success: true };
+    if (messageError) {
+      console.error('Failed to add system message:', messageError);
+    }
+
+    // Update user status
+    const { error: userError } = await supabase
+      .from('healjai_users')
+      .update({ status: 'left' })
+      .eq('id', userId);
+
+    if (userError) {
+      console.error('Failed to update user status:', userError);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error in leaveChat:', error);
+    return { success: false, error: 'Failed to leave chat' };
+  }
 }

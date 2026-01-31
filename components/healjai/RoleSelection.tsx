@@ -80,7 +80,7 @@ export default function RoleSelection() {
 
   if (isSearching) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center max-w-2xl mx-auto shadow-sm min-h-[400px] flex flex-col items-center justify-center">
+      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center max-w-2xl shadow-sm min-h-[400px] flex flex-col items-center justify-center">
         <div className="mb-6 relative">
              <div className="w-16 h-16 border-4 border-gray-100 border-t-yellow-400 rounded-full animate-spin"></div>
         </div>
