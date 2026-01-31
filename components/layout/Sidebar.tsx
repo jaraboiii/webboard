@@ -4,9 +4,6 @@ export default function Sidebar() {
   const menuItems = [
     { icon: '🏠', label: 'หน้าแรก', href: '/', active: true },
     { icon: '🔥', label: 'มาแรง', href: '/trending' },
-    { icon: '💬', label: 'ทั่วไป', href: '/category/general' },
-    { icon: '⛏️', label: 'Minecraft Server', href: '/category/minecraft' },
-    { icon: '💻', label: 'Technology', href: '/category/tech' },
   ];
 
   return (
@@ -35,21 +32,34 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Special Menu - Healjai */}
+        {/* Special Menu */}
         <div>
           <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
             พิเศษ
           </h3>
-          <Link
-            href="/healjai"
-            className="group flex items-center gap-3 px-4 py-2.5 mx-2 text-sm font-medium rounded-lg bg-orange-50 text-orange-800 border border-orange-100 hover:bg-orange-100 transition-all"
-          >
-            <span className="text-lg group-hover:scale-110 transition-transform">❤️</span>
-            <div className="flex flex-col">
-              <span>Healjai</span>
-              <span className="text-[10px] text-orange-600/80 font-normal">พื้นที่พักใจ</span>
-            </div>
-          </Link>
+          <div className="space-y-2">
+              <Link
+                href="/healjai"
+                className="group flex items-center gap-3 px-4 py-2.5 mx-2 text-sm font-medium rounded-lg bg-orange-50 text-orange-800 border border-orange-100 hover:bg-orange-100 transition-all"
+              >
+                <span className="text-lg group-hover:scale-110 transition-transform">❤️</span>
+                <div className="flex flex-col">
+                  <span>Healjai</span>
+                  <span className="text-[10px] text-orange-600/80 font-normal">พื้นที่พักใจ</span>
+                </div>
+              </Link>
+
+              <Link
+                href="/category/minecraft"
+                className="group flex items-center gap-3 px-4 py-2.5 mx-2 text-sm font-medium rounded-lg bg-green-50 text-green-800 border border-green-100 hover:bg-green-100 transition-all"
+              >
+                <span className="text-lg group-hover:scale-110 transition-transform">⛏️</span>
+                <div className="flex flex-col">
+                  <span>Minecraft</span>
+                  <span className="text-[10px] text-green-600/80 font-normal">Community Server</span>
+                </div>
+              </Link>
+          </div>
         </div>
 
         {/* Footer Links */}

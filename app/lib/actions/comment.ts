@@ -1,7 +1,7 @@
 
 'use server';
 
-import { supabase } from '@/app/lib/supabase';
+import { createClient } from '@/app/lib/supabase/server';
 import { CreateCommentSchema } from '../definitions';
 import { revalidatePath } from 'next/cache';
 
@@ -19,7 +19,13 @@ export async function createComment(prevState: unknown, formData: FormData) {
   }
 
   const { content, topicId } = validatedFields.data;
-  const authorId = '00000000-0000-0000-0000-000000000000'; // Mock Auth
+  
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { message: 'กรุณาเข้าสู่ระบบก่อนตอบกลับ' };
+  }
 
   try {
     const { error } = await supabase
@@ -27,7 +33,7 @@ export async function createComment(prevState: unknown, formData: FormData) {
         .insert({
             content,
             topic_id: topicId,
-            author_id: authorId
+            author_id: user.id
         });
 
     if (error) {

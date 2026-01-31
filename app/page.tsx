@@ -6,33 +6,115 @@ import HealjaiBanner from '@/components/webboard/HealjaiBanner';
 import PostButton from '@/components/webboard/PostButton';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { createClient } from '@/app/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Webboard - Community & Discussions',
   description: 'Sharing ideas, questions, and experiences with the community.',
 };
 
-// Mock async data fetching
+// Fetch real data from Supabase
 async function getTopics() {
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate latency
-  return [
-    { id: '1', title: 'สอบถามวิธีแก้ปัญหา Next.js 15 Hydration Error ครับ', author: 'DevNewbie', category: 'Programming', replies: 12, timeAgo: '2ชม. ที่แล้ว' },
-    { id: '2', title: 'Minecraft Server SS4 เปิดเมื่อไหร่ครับ?', author: 'CreeperLover', category: 'Minecraft', replies: 56, timeAgo: '5ชม. ที่แล้ว' },
-    { id: '3', title: 'วันนี้รู้สึกดิ่งมากเลย... ไม่รู้จะคุยกับใครดี', author: 'AloneCat', category: 'Healjai', replies: 8, timeAgo: '1วัน ที่แล้ว' },
-    { id: '4', title: 'รีวิว Keyboard Custom ตัวแรกในชีวิต หมดไป 5000 คุ้มไหม?', author: 'MechKey', category: 'Review', replies: 23, timeAgo: '1วัน ที่แล้ว' },
-    { id: '5', title: 'หาเพื่อนเล่น Valheim ครับ เริ่มใหม่', author: 'Viking007', category: 'Games', replies: 2, timeAgo: '2วัน ที่แล้ว' },
-  ];
+  const supabase = await createClient();
+  
+  const { data: topics, error } = await supabase
+    .from('topics')
+    .select(`
+      *,
+      users (name),
+      categories (name)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching topics:', error);
+    return [];
+  }
+
+
+interface Topic {
+  id: string;
+  title: string;
+  users: { name: string } | null;
+  categories: { name: string } | null;
+  created_at: string;
+}
+
+  return topics.map((topic: Topic) => ({
+    id: topic.id,
+    title: topic.title,
+    author: topic.users?.name || 'Unknown',
+    category: topic.categories?.name || 'General',
+    replies: 0, 
+    timeAgo: new Date(topic.created_at).toLocaleDateString('th-TH'),
+  }));
+}
+
+async function getPopularCategories() {
+    const supabase = await createClient();
+    
+    // In a real high-scale app, we might have a counter cache or dedicated analytics table.
+    // For now, we query categories directly. 
+    // If you want "Trending Tags" based on usage, we would count topic.category_id usage.
+    // Simplified: Just getting lists of categories for now as "Tags"
+    
+    const { data: categories } = await supabase
+        .from('categories')
+        .select('name')
+        .limit(5); // Just getting 5 categories to show as tags
+        
+    // Ideally: Select count(id) from topics group by category_id order by count desc
+    
+    return categories?.map(c => c.name) || [];
 }
 
 async function Feed() {
   const topics = await getTopics();
+
+  if (topics.length === 0) {
+    return (
+        <div className="text-center py-20 text-gray-500 bg-white rounded-xl border border-gray-100">
+            <p className="text-lg mb-2">ยังไม่มีกระทู้</p>
+            <p className="text-sm">เป็นคนแรกที่เริ่มบทสนทนาได้เลย!</p>
+        </div>
+    );
+  }
+
+interface TopicProps {
+  id: string;
+  title: string;
+  author: string;
+  category: string;
+  replies: number;
+  timeAgo: string;
+}
+
   return (
     <div className="space-y-3">
-      {topics.map((topic) => (
+      {topics.map((topic: TopicProps) => (
         <TopicCard key={topic.id} {...topic} />
       ))}
     </div>
   );
+}
+
+async function PopularTags() {
+    const tags = await getPopularCategories();
+    
+    if (tags.length === 0) return null;
+
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <h3 className="font-bold text-gray-900 mb-3">แท็กยอดนิยม</h3>
+            <div className="flex flex-wrap gap-2">
+                {tags.map(tag => (
+                    <span key={tag} className="px-3 py-1 bg-gray-50 text-xs font-medium text-gray-600 rounded-full hover:bg-gray-100 cursor-pointer">
+                        #{tag}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 function FeedSkeleton() {
@@ -47,6 +129,19 @@ function FeedSkeleton() {
       ))}
     </div>
   );
+}
+
+function TagSkeleton() {
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl p-5 h-32 animate-pulse">
+            <div className="h-4 bg-gray-100 rounded w-1/4 mb-4"></div>
+            <div className="flex gap-2">
+               <div className="h-6 w-16 bg-gray-100 rounded-full"></div>
+               <div className="h-6 w-20 bg-gray-100 rounded-full"></div>
+               <div className="h-6 w-12 bg-gray-100 rounded-full"></div>
+            </div>
+        </div>
+    )
 }
 
 export default function Home() {
@@ -87,16 +182,9 @@ export default function Home() {
 
           {/* Right Column (Optional - Trending/Ads) */}
           <div className="hidden lg:block w-72 space-y-6">
-             <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="font-bold text-gray-900 mb-3">แท็กยอดนิยม</h3>
-                <div className="flex flex-wrap gap-2">
-                   {['Minecraft', 'Coding', 'ระบายใจ', 'Review', 'K-Pop'].map(tag => (
-                      <span key={tag} className="px-3 py-1 bg-gray-50 text-xs font-medium text-gray-600 rounded-full hover:bg-gray-100 cursor-pointer">
-                         #{tag}
-                      </span>
-                   ))}
-                </div>
-             </div>
+             <Suspense fallback={<TagSkeleton />}>
+                <PopularTags />
+             </Suspense>
           </div>
         </div>
       </main>

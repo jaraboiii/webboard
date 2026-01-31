@@ -1,7 +1,7 @@
 
 'use server';
 
-import { supabase } from '@/app/lib/supabase';
+import { createClient } from '@/app/lib/supabase/server';
 import { CreateTopicSchema, DeleteTopicSchema } from '../definitions';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -23,8 +23,12 @@ export async function createTopic(prevState: unknown, formData: FormData) {
 
   const { title, content, categoryId } = validatedFields.data;
   
-  // Mock Author ID (Replace with Supabase Auth session later)
-  const authorId = '00000000-0000-0000-0000-000000000000';
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { message: 'กรุณาเข้าสู่ระบบก่อนตั้งกระทู้' };
+  }
 
   try {
     const { error } = await supabase
@@ -33,7 +37,7 @@ export async function createTopic(prevState: unknown, formData: FormData) {
         title,
         content,
         category_id: categoryId,
-        author_id: authorId
+        author_id: user.id
       });
 
     if (error) {
@@ -55,6 +59,9 @@ export async function createTopic(prevState: unknown, formData: FormData) {
 export async function deleteTopic(topicId: string) {
     const validated = DeleteTopicSchema.safeParse({ id: topicId });
     if (!validated.success) return { message: 'ID ไม่ถูกต้อง' };
+
+    const supabase = await createClient();
+    // Optional: Check if user owns the topic before deleting
 
     try {
         const { error } = await supabase

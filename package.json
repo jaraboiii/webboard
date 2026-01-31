@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push:dev": "dotenv -e .env.development drizzle-kit push",
+    "db:push:staging": "dotenv -e .env.staging drizzle-kit push",
+    "db:push:prod": "dotenv -e .env.production drizzle-kit push"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
     "bad-words": "^4.0.0",
     "clsx": "^2.1.1",
@@ -27,6 +31,7 @@
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
